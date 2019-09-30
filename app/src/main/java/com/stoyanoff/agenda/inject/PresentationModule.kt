@@ -4,6 +4,7 @@
 
 package com.stoyanoff.agenda.inject
 
+import com.stoyanoff.agenda.presentation.home.EventsAdapter
 import com.stoyanoff.agenda.presentation.home.HomeViewModel
 import com.stoyanoff.agenda.presentation.home.HomeViewState
 import org.koin.android.viewmodel.ext.koin.viewModel
@@ -14,7 +15,8 @@ import org.koin.dsl.module.module
  *  All rights reserved.
  */
 val presentationModule = module {
-    viewModel { HomeViewModel(get()) }
+    viewModel { HomeViewModel(get(), get()) }
     factory { HomeViewState() }
+    factory { EventsAdapter() }
 
 }

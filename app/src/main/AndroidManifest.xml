@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.stoyanoff.agenda">
 
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+
     <application
         android:name=".util.CustomApplication"
         android:allowBackup="true"
