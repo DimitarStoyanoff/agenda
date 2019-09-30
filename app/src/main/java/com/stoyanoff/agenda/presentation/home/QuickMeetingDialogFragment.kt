@@ -29,7 +29,12 @@ class QuickMeetingDialogFragment : DialogFragment() {
         val fragmentView = inflater.inflate(R.layout.quick_meeting_dialog,container,false)
 
         with(QuickMeetingDialogFragmentArgs.fromBundle(arguments)){
-            fragmentView.quickMeetingValue.text = getDate(availableTime.toLong())
+            var time : String = try {
+                 getDate(availableTime.toLong())
+            } catch (e: NumberFormatException) {
+                 "You are very busy"
+            }
+            fragmentView.quickMeetingValue.text = time
 
         }
 

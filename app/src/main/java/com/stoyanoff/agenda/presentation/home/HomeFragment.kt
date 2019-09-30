@@ -8,9 +8,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -35,7 +33,7 @@ class HomeFragment : BaseViewFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         fragmentView = inflater.inflate(R.layout.fragment_home,container,false)
-
+        setHasOptionsMenu(true)
 
         return fragmentView
     }
@@ -65,6 +63,7 @@ class HomeFragment : BaseViewFragment() {
     override fun initViewModelStates() {
         handleEventsViewState()
         handleNavigateToDetailsEvent()
+        handleNavigateToQuickMeetingEvent()
     }
 
     override fun toggleLoading(isVisible: Boolean) {
@@ -111,6 +110,16 @@ class HomeFragment : BaseViewFragment() {
         })
     }
 
+    private fun handleNavigateToQuickMeetingEvent() {
+        viewModel.navigateToQuickMeetingDetails.observe(this, Observer {
+            it.getContentIfNotHandled()?.let {time ->
+                val action = HomeFragmentDirections.actionHomeFragmentToQuickMeetingDialogFragment(time)
+                navigateTo(action = action)
+            }
+
+        })
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -122,6 +131,22 @@ class HomeFragment : BaseViewFragment() {
             grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 loadData()
             } else Toast.makeText(context,"Why?", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater?.inflate(R.menu.home_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return when (item?.itemId) {
+            R.id.quick_meeting -> {
+                viewModel.showQuickMeeting()
+                true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }
 

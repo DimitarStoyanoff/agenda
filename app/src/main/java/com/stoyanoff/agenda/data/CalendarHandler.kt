@@ -2,6 +2,10 @@
  * All rights reserved.
  */
 
+/*
+ * All rights reserved.
+ */
+
 package com.stoyanoff.agenda.data
 
 import android.content.ContentResolver
@@ -10,6 +14,8 @@ import android.net.Uri
 import android.provider.CalendarContract
 import com.stoyanoff.agenda.data.model.Attendee
 import com.stoyanoff.agenda.data.model.CalendarEvent
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Created by L on 30/09/2019.
@@ -38,16 +44,18 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
         CalendarContract.Attendees.ATTENDEE_EMAIL
     )
 
+    private val EVENT_SCOPE_PROJECTION : Array<String> = arrayOf(
+        CalendarContract.Events._ID
+    )
+
     fun getCalendarEvents() : MutableList<CalendarEvent> {
          val list : MutableList<CalendarEvent> = ArrayList<CalendarEvent>()
 
          // Run query
          val uri: Uri = CalendarContract.Events.CONTENT_URI
-         val selection: String = "((${CalendarContract.Calendars.ACCOUNT_NAME} = ?) AND (" +
-                 "${CalendarContract.Calendars.ACCOUNT_TYPE} = ?) AND (" +
-                 "${CalendarContract.Calendars.OWNER_ACCOUNT} = ?))"
-         val selectionArgs: Array<String> = arrayOf("hera@example.com", "com.example", "hera@example.com")
-         val cur: Cursor = contentResolver.query(uri, EVENTS_PROJECTION, null, null, null)
+         val selection = "${CalendarContract.Events.DTSTART} > ?"
+         val selectionArgs: Array<String> = arrayOf("${GregorianCalendar().timeInMillis}")
+         val cur: Cursor = contentResolver.query(uri, EVENTS_PROJECTION, selection, selectionArgs, null)
 
         // Use the cursor to step through the returned records
         while (cur.moveToNext()) {
@@ -67,7 +75,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
             // Do something with the values...
 
             var attendeeList : MutableList<Attendee> = ArrayList<Attendee>()
-            //FIXME condition fails, maybe rework to only one attendees query
+            //FIXME condition fails, maybe rework to only one attendees query to improve performance
 //            if(hasAttendee == 0) {
                 attendeeList = getEventAttendees(id.toString())
 //            }
@@ -82,7 +90,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
     private fun getEventAttendees(arrayId : String) : MutableList<Attendee> {
         val attendeeList : MutableList<Attendee> = ArrayList<Attendee>()
         val uri: Uri = CalendarContract.Attendees.CONTENT_URI
-        val selection: String = "${CalendarContract.Attendees.EVENT_ID} = ?"
+        val selection = "${CalendarContract.Attendees.EVENT_ID} = ?"
         val selectionArgs: Array<String> = arrayOf(arrayId)
         val cur: Cursor = contentResolver.query(uri, ATTENDEES_PROJECTION, selection, selectionArgs, null)
 
@@ -93,6 +101,31 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
         return attendeeList
     }
 
+    fun getClosestMeetingTime() : String {
+        //TODO add variables for 1 hour
 
+        val calendar = GregorianCalendar()
+        val unroundedMinutes = calendar.get(Calendar.MINUTE)
+        val mod = unroundedMinutes % 30
+        calendar.add(Calendar.MINUTE, if (mod < 15) -mod else 30 - mod)
+
+        val uri: Uri = CalendarContract.Events.CONTENT_URI
+        val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (" +
+                "${CalendarContract.Events.DTEND} = ?))"
+        val selectionArgs: Array<String> = arrayOf("${calendar.timeInMillis}", "${calendar.timeInMillis + 1800000}")
+
+
+        var eventsFound : Boolean = true
+        while (eventsFound) {
+            val cur: Cursor = contentResolver.query(uri, EVENT_SCOPE_PROJECTION, selection, selectionArgs, null)
+            eventsFound = cur.moveToNext()
+            if(eventsFound)
+                calendar.add(Calendar.MINUTE,30)
+            cur.close()  //TODO check performance with multiple iterations
+        }
+
+
+        return calendar.timeInMillis.toString()
+    }
 
 }
