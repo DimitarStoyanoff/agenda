@@ -4,8 +4,8 @@
 
 package com.stoyanoff.agenda.inject
 
-import com.stoyanoff.agenda.data.LocalDataSource
-import com.stoyanoff.agenda.data.LocalRepository
+import com.stoyanoff.agenda.data.CalendarHandler
+import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module.module
 
 /**
@@ -13,5 +13,5 @@ import org.koin.dsl.module.module
  *  All rights reserved.
  */
 val dataModule = module {
-    factory<LocalDataSource> { LocalRepository() }
+    single { CalendarHandler(androidApplication().contentResolver) }
 }
