@@ -45,7 +45,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
     )
 
     private val EVENT_SCOPE_PROJECTION : Array<String> = arrayOf(
-        CalendarContract.Events._ID
+        CalendarContract.Events.AVAILABILITY
     )
 
     fun getCalendarEvents() : MutableList<CalendarEvent> {
@@ -103,24 +103,27 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
 
     fun getClosestMeetingTime() : String {
         //TODO add variables for 1 hour
+        val minuteWindow = 30
+        val windowInMilliseconds = minuteWindow * 60 * 1000
 
         val calendar = GregorianCalendar()
         val unroundedMinutes = calendar.get(Calendar.MINUTE)
-        val mod = unroundedMinutes % 30
-        calendar.add(Calendar.MINUTE, if (mod < 15) -mod else 30 - mod)
+        val mod = unroundedMinutes % minuteWindow
+        calendar.add(Calendar.MINUTE, minuteWindow - mod)
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
         val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (" +
                 "${CalendarContract.Events.DTEND} = ?))"
-        val selectionArgs: Array<String> = arrayOf("${calendar.timeInMillis}", "${calendar.timeInMillis + 1800000}")
+        val selectionArgs: Array<String> = arrayOf("${calendar.timeInMillis}", "${calendar.timeInMillis + windowInMilliseconds}")
 
 
-        var eventsFound : Boolean = true
+        var eventsFound = true
         while (eventsFound) {
             val cur: Cursor = contentResolver.query(uri, EVENT_SCOPE_PROJECTION, selection, selectionArgs, null)
             eventsFound = cur.moveToNext()
             if(eventsFound)
-                calendar.add(Calendar.MINUTE,30)
+                if(cur.getInt(0) == CalendarContract.Events.AVAILABILITY_BUSY)
+                calendar.add(Calendar.MINUTE, minuteWindow)
             cur.close()  //TODO check performance with multiple iterations
         }
 
