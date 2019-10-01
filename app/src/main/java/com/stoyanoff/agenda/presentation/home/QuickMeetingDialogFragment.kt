@@ -43,7 +43,7 @@ class QuickMeetingDialogFragment : DialogFragment() {
 
     private fun getDate(milliSeconds: Long): String {
         val formatter = SimpleDateFormat(
-            "hh:mm", Locale.getDefault()
+            "HH:mm", Locale.getDefault()
         )
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = milliSeconds
