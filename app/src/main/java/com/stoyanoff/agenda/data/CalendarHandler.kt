@@ -14,6 +14,9 @@ import android.net.Uri
 import android.provider.CalendarContract
 import com.stoyanoff.agenda.data.model.Attendee
 import com.stoyanoff.agenda.data.model.CalendarEvent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -48,7 +51,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
         CalendarContract.Events.AVAILABILITY
     )
 
-    fun getCalendarEvents() : MutableList<CalendarEvent> {
+    suspend fun getCalendarEvents() : MutableList<CalendarEvent> = withContext(Dispatchers.IO) {
          val list : MutableList<CalendarEvent> = ArrayList<CalendarEvent>()
 
          // Run query
@@ -83,7 +86,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
                 calendarDisplayName,calendarColor,availability,isAllDay, attendeeList))
         }
         cur.close()
-         return list
+        return@withContext list
     }
 
 
@@ -101,7 +104,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
         return attendeeList
     }
 
-    fun getClosestMeetingTime() : String {
+    suspend fun getClosestMeetingTime() : String = withContext(Dispatchers.IO) {
         //TODO add variables for 1 hour
         val minuteWindow = 30
         val windowInMilliseconds = minuteWindow * 60 * 1000
@@ -128,7 +131,7 @@ class CalendarHandler(private val contentResolver: ContentResolver) {
         }
 
 
-        return calendar.timeInMillis.toString()
+        return@withContext calendar.timeInMillis.toString()
     }
 
 }

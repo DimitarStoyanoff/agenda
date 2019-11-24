@@ -5,10 +5,12 @@
 package com.stoyanoff.agenda.presentation.home
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.stoyanoff.agenda.data.CalendarHandler
 import com.stoyanoff.agenda.data.model.CalendarEvent
 import com.stoyanoff.agenda.presentation.common.BaseViewModel
 import com.stoyanoff.agenda.presentation.common.Event
+import kotlinx.coroutines.launch
 
 /**
  * Created by L on 29/09/2019.
@@ -31,11 +33,12 @@ class HomeViewModel(
         if(events.size == 0) {
             toggleLoadingState(true)
 
-            //TODO fix gradle libs to change these to coroutines
-            events = calendarHandler.getCalendarEvents()
-            viewState.value?.let {
-                val newState = homeViewState.copy(showLoading = false, events = events)
-                viewState.value = newState
+            viewModelScope.launch {
+                events = calendarHandler.getCalendarEvents()
+                viewState.value?.let {
+                    val newState = homeViewState.copy(showLoading = false, events = events)
+                    viewState.value = newState
+                }
             }
         }
     }
@@ -52,7 +55,8 @@ class HomeViewModel(
     }
 
     internal fun showQuickMeeting() {
-
-        navigateToQuickMeetingDetails.value = Event(calendarHandler.getClosestMeetingTime())
+        viewModelScope.launch {
+            navigateToQuickMeetingDetails.value = Event(calendarHandler.getClosestMeetingTime())
+        }
     }
 }
